@@ -19,7 +19,7 @@ describe('Department Repository', () => {
     });
 
     describe('simple AND', () => {
-        it('get some results, when match', async () => {
+        it('get some results, when match', async() => {
             let results = await memoryProvider.query({
                 where: {
                     value: 13,
@@ -31,7 +31,7 @@ describe('Department Repository', () => {
             expect(results[0].text).to.be.equal('second');
         });
 
-        it('get not results, when no match', async () => {
+        it('get not results, when no match', async() => {
             let results = await memoryProvider.query({
                 where: {
                     value: 13,
@@ -41,5 +41,39 @@ describe('Department Repository', () => {
 
             expect(results).to.have.length(0);
         })
+    });
+
+    describe('OR', () => {
+        it('top level OR', async() => {
+            let results = await memoryProvider.query({
+                where: {
+                    $or: {
+                        value: 13,
+                        text: 'first'
+                    },
+                }
+            });
+
+            expect(results).to.have.length(2);
+        });
+    });
+
+    describe('check', () => {
+        it('check operator', async() => {
+            try {
+                let results = await memoryProvider.query({
+                    where: {
+                        $someOperator: {
+                            value: 13
+                        },
+                    }
+                });
+            } catch (err) {
+                //TODO check error type
+                return;
+            }
+
+            expect.fail();
+        });
     });
 });
