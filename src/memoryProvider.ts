@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
-import queryBuilder from './queryBuilder';
+import filterHelper from './core/filterHelper';
+import sortHelper from './core/sortHelper';
 
 export default {
     init,
@@ -15,10 +16,24 @@ function init(data) {
 function query(params) {
     let results = storage;
 
+    //TODO check query params should be one of (where, limit, order etc)
+
     if (params.where) {
-        let queryFilter = queryBuilder.getQuery(params.where);
+        let queryFilter = filterHelper.getFilter(params.where);
 
         results = results.filter(x => queryFilter(x));
+    }
+
+    if (params.order) {
+        sortHelper.sort(results, params.order);
+    }
+
+    if (params.limit) {
+        let offset = params.offset;
+
+        if (!offset) offset = 0;
+
+        results = results.slice(offset, offset + params.limit);
     }
 
     results = results.map(x => _.cloneDeep(x));

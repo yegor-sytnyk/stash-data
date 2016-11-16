@@ -2,7 +2,7 @@ import helper from './_testHelper';
 import {expect} from 'chai';
 import memoryProvider from '../memoryProvider';
 
-describe('Department Repository', () => {
+describe('Query Test', () => {
     before((done) => {
         let data = [
             {id: 1, text: "first", value: 7},
@@ -16,6 +16,15 @@ describe('Department Repository', () => {
         memoryProvider.init(data);
 
         done();
+    });
+
+    describe('empty query', () => {
+        it('returns all by default', async() => {
+            let results = await memoryProvider.query({
+            });
+
+            expect(results).to.have.length(6);
+        });
     });
 
     describe('simple AND', () => {
@@ -43,18 +52,51 @@ describe('Department Repository', () => {
         })
     });
 
-    describe('OR', () => {
-        it('top level OR', async() => {
+    describe('combiners', () => {
+        it('OR with inner AND matching', async() => {
             let results = await memoryProvider.query({
                 where: {
                     $or: {
-                        value: 13,
+                        $and: {
+                            text: 'second',
+                            value: 13
+                        },
                         text: 'first'
                     },
                 }
             });
 
             expect(results).to.have.length(2);
+        });
+
+        it('OR with inner AND NOT matching', async() => {
+            let results = await memoryProvider.query({
+                where: {
+                    $or: {
+                        $and: {
+                            text: 'second',
+                            value: 14
+                        },
+                        text: 'first'
+                    },
+                }
+            });
+
+            expect(results).to.have.length(1);
+        });
+    });
+
+    describe('basic operators', () => {
+        it('$gt operator', async() => {
+            let results = await memoryProvider.query({
+                where: {
+                    value: {
+                        $gt: 24
+                    }
+                }
+            });
+
+            expect(results).to.have.length(3);
         });
     });
 
@@ -74,6 +116,25 @@ describe('Department Repository', () => {
             }
 
             expect.fail();
+        });
+    });
+
+    describe('skip/limit', () => {
+        it('limit with no offset', async() => {
+            let results = await memoryProvider.query({
+                limit: 2
+            });
+
+            expect(results).to.have.length(2);
+        });
+
+        it('limit with no offset', async() => {
+            let results = await memoryProvider.query({
+                limit: 4,
+                offset: 4
+            });
+
+            expect(results).to.have.length(2);
         });
     });
 });

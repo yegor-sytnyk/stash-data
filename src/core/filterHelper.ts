@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 
 export default {
-    getQuery
+    getFilter
 }
 
 const operators = [
@@ -12,16 +12,16 @@ const operators = [
     '$lte',
     '$lt',
     '$not',
-    '$is',
+    //'$is',
     '$like',
     '$notLike',
     '$iLike',
     '$notILike',
     '$between',
     '$notBetween',
-    '$overlap',
-    '$contains',
-    '$contained'
+    //'$overlap',
+    //'$contains',
+    //'$contained'
 ];
 
 const combiners = [
@@ -29,15 +29,15 @@ const combiners = [
     '$and'
 ];
 
-function getQuery(where) {
+function getFilter(where) {
     return combineObjectQueries(where);
 }
 
-function combineObjectQueries(query, isOr = false) {
+function combineObjectQueries(query, isOr = false, parentKey = null) {
     let subQueries = [];
 
     for (let param of Object.keys(query)) {
-        let subQuery = getSubQuery(param, query[param]);
+        let subQuery = getSubQuery(param, query[param], parentKey);
 
         if (subQuery) {
             subQueries.push(subQuery);
@@ -51,26 +51,50 @@ function combineObjectQueries(query, isOr = false) {
     return andJoin(...subQueries);
 }
 
-function getSubQuery(key, value) {
+function getSubQuery(key, value, parentKey) {
     if (key.startsWith('$')) {
         checkOperator(key);
 
         if (combiners.indexOf(key) !== -1) {
-            return combineObjectQueries(value, key === '$or')
+            return combineObjectQueries(value, key === '$or', parentKey)
+        } else {
+            if (!parentKey) throw Error('TODO: error when operator in top level where');
+
+            return getSimpleOperatorQuery(key, parentKey, value)
         }
     } else {
         checkFieldName(key);
 
         if (_.isObject(value)) {
-            let query = combineObjectQueries(value);
+            let query = combineObjectQueries(value, false, key);
 
-            return (x) => x[key] === query(x)
+            return (x) => query(x)
         } else {
             return (x) => x[key] === value
         }
     }
+}
 
-    return null;
+function getSimpleOperatorQuery(operator, key, value) {
+    //TODO check type for example for $gt should be number for $not bool
+    switch (operator){
+        case '$eq':
+            return (x) => x[key] === value;
+        case '$ne':
+            return (x) => x[key] !== value;
+        case '$gt':
+            return (x) => x[key] > value;
+        case 'gte':
+            return (x) => x[key] >= value;
+        case '$lt':
+            return (x) => x[key] < value;
+        case 'lte':
+            return (x) => x[key] <= value;
+        case '$not':
+            return (x) => x[key] ? false: true;
+        default:
+            throw new Error(`Operator ${operator} is not supported yet.`);
+    }
 }
 
 function checkOperator(operator) {
