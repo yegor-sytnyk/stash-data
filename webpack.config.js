@@ -4,16 +4,17 @@ var path = require("path");
 var webpack = require('webpack');
 var nodeExternals = require('webpack-node-externals');
 
-module.exports = {
+var libraryName = 'stash-data';
+
+var config = {
     entry: {
         app: "./build/index.js"
     },
     output: {
         path: "./dist",
-        filename: 'lib.js',
-        library: 'Stash',
-        libraryTarget: 'umd',
-        umdNamedDefine: true
+        filename: libraryName + '.js',
+        library: libraryName,
+        libraryTarget: 'commonjs2'
     },
     resolve: {
         extensions: ["", ".js"]
@@ -35,3 +36,5 @@ module.exports = {
     externals: [nodeExternals()],
     devtool: "source-map"
 };
+
+module.exports = config;
