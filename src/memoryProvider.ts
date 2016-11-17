@@ -38,5 +38,5 @@ function query(params) {
 
     results = results.map(x => _.cloneDeep(x));
 
-    return results;
+    return Promise.resolve(results);
 }

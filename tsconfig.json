@@ -3,7 +3,7 @@
     "target": "es6",
     "module": "commonjs",
     "sourceMap": true,
-    "outDir": "build/src",
+    "outDir": "build",
     "rootDir": "src",
     "allowUnreachableCode": true
   },
